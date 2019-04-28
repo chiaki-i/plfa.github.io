@@ -805,6 +805,20 @@ is associative and commutative.
 
 \begin{code}
 -- Your code goes here
++-swap : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap m n p =
+  begin
+    m + (n + p)
+  ≡⟨ sym (+-assoc m n p) ⟩
+    m + n + p
+  ≡⟨ cong (_+ p) (+-comm m n) ⟩
+    n + m + p
+  ≡⟨ +-assoc n m p ⟩
+    n + (m + p)
+  ∎
+
++-swap′ : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap′ m n p rewrite sym (+-assoc m n p) | cong (_+ p) (+-comm m n) | +-assoc n m p = refl
 \end{code}
 
 #### Exercise `*-distrib-+` (recommended) {#times-distrib-plus}
@@ -816,7 +830,18 @@ Show multiplication distributes over addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 \begin{code}
--- Your code goes here
+*-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distrib-+ zero n p = refl
+*-distrib-+ (suc m) n p =
+  begin
+    p + (m + n) * p
+  ≡⟨⟩
+    (suc m + n) * p
+  ≡⟨ cong (p +_) (*-distrib-+ m n p) ⟩
+    p + (m * p + n * p)
+  ≡⟨ sym (+-assoc p (m * p) (n * p)) ⟩
+    p + m * p + n * p
+  ∎
 \end{code}
 
 #### Exercise `*-assoc` (recommended) {#times-assoc}
@@ -828,7 +853,9 @@ Show multiplication is associative, that is,
 for all naturals `m`, `n`, and `p`.
 
 \begin{code}
--- Your code goes here
+*-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc zero n p = refl
+*-assoc (suc m) n p rewrite *-distrib-+ n (m * n) p | cong (n * p +_) (*-assoc m n p) = refl
 \end{code}
 
 #### Exercise `*-comm` {#times-comm}
@@ -841,7 +868,21 @@ for all naturals `m` and `n`.  As with commutativity of addition,
 you will need to formulate and prove suitable lemmas.
 
 \begin{code}
--- Your code goes here
+*-zeroʳ : ∀ (m : ℕ) → m * zero ≡ zero
+*-zeroʳ zero = refl
+*-zeroʳ (suc m) = *-zeroʳ m
+
+-- *-identityʳ : ∀ (m : ℕ) → m * 1 ≡ m
+-- *-identityʳ zero = refl
+-- *-identityʳ (suc m) = cong suc (*-identityʳ m)
+
+*-suc : ∀ (m n : ℕ) → m * (suc n) ≡ m + m * n
+*-suc zero n = refl
+*-suc (suc m) n rewrite cong suc (cong (n +_) (*-suc m n)) = cong suc (+-swap n m (m * n))
+
+*-comm : ∀ (m n : ℕ) → m * n ≡ n * m
+*-comm zero n = sym (*-zeroʳ n)
+*-comm (suc m) n rewrite cong (n +_) (*-comm m n) = sym (*-suc n m)
 \end{code}
 
 
@@ -854,7 +895,9 @@ Show
 for all naturals `n`. Did your proof require induction?
 
 \begin{code}
--- Your code goes here
+0∸n≡0 : ∀ (n : ℕ) → zero ∸ n ≡ zero
+0∸n≡0 zero = refl
+0∸n≡0 (suc n) = refl
 \end{code}
 
 
@@ -898,7 +941,75 @@ over bitstrings:
 For each law: if it holds, prove; if not, give a counterexample.
 
 \begin{code}
--- Your code goes here
+inc : Bin → Bin
+inc nil    = x1 nil
+inc (x0 b) = x1 b
+inc (x1 b) = x0 inc b
+
+-- binary numbers: test with C-c C-n
+b_zero   = x0 nil
+b_one    = x1 nil
+b_two    = x0 x1 nil
+b_three  = x1 x1 nil
+b_four   = x0 x0 x1 nil
+b_eleven = x1 x1 x0 x1 nil
+b_twelve = x0 x0 x1 x1 nil
+
+-- unary numbers
+u_zero = zero -- ≡ 0
+u_one  = suc zero -- ≡ 1
+u_two  = suc (suc zero) -- ≡ 2
+
+to : ℕ → Bin
+to zero = x0 nil
+to (suc zero) = x1 nil
+to (suc (suc x)) = inc (to (suc x))
+
+from : Bin → ℕ
+from nil = zero
+from (x0 x) = (from x) + (from x)
+from (x1 x) = suc ((from x) + (from x))
+
+from-inc : (x : Bin) → from (inc x) ≡ suc (from x)
+from-inc nil = refl
+from-inc (x0 x) = refl
+from-inc (x1 x) =
+  begin
+    from (inc x) + from (inc x)
+  ≡⟨ cong (_+ from (inc x)) (from-inc x) ⟩
+    (suc (from x)) + from (inc x)
+  ≡⟨ cong ((suc (from x)) +_) (from-inc x) ⟩
+    (suc (from x)) + (suc (from x))
+  ≡⟨ +-suc (suc (from x)) (from x) ⟩
+    suc (suc (from x + from x))
+  ∎
+
+to-from : ∀ (x : Bin) → to (from x) ≡ x
+to-from nil = {!!} -- unprovable unless (x0 nil ≡ nil) is defined
+  -- begin
+  --   (x0 nil)
+  -- ≡⟨ {!!} ⟩
+  --   {!!}
+  -- ≡⟨ {!!} ⟩
+  --   nil
+  -- ∎
+to-from (x0 x) = {!!}
+  -- begin
+  --   to (from x + from x)
+  -- ≡⟨ {!!} ⟩
+  --   {!!}
+  -- ≡⟨ {!!} ⟩
+  --   (x0 x)
+  -- ∎
+to-from (x1 x) = {!!}
+
+from-to-suc : ∀ (n : ℕ) → from (to (suc n)) ≡ suc (from (to n))
+from-to-suc zero = refl
+from-to-suc (suc n) = from-inc (to (suc n))
+
+from-to : ∀ (n : ℕ) → from (to n) ≡ n
+from-to zero = refl
+from-to (suc n) rewrite from-to-suc n = cong suc (from-to n)
 \end{code}
 
 
