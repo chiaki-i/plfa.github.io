@@ -82,6 +82,7 @@ Write out `7` in longhand.
 
 \begin{code}
 -- Your code goes here
+seven = suc (suc (suc (suc (suc (suc (suc zero))))))
 \end{code}
 
 
@@ -507,6 +508,21 @@ Check that `3 ^ 4` is `81`.
 
 \begin{code}
 -- Your code goes here
+_^_ : ℕ → ℕ → ℕ
+n ^ zero = 1
+n ^ suc m = n * (n ^ m)
+
+_ : 3 ^ 4 ≡ 81
+_ =
+ begin
+   3 ^ 4
+ ≡⟨⟩ 3 * (3 ^ 3)
+ ≡⟨⟩ 3 * (3 * (3 ^ 2))
+ ≡⟨⟩ 3 * (3 * (3 * (3 ^ 1)))
+ ≡⟨⟩ 3 * (3 * (3 * (3 * (3 ^ 0))))
+ ≡⟨⟩ 3 * (3 * (3 * (3 * 1)))
+ ≡⟨⟩ 81
+ ∎
 \end{code}
 
 
@@ -572,6 +588,30 @@ Compute `5 ∸ 3` and `3 ∸ 5`, writing out your reasoning as a chain of equati
 
 \begin{code}
 -- Your code goes here
+_ =
+  begin
+     5 ∸ 3
+  ≡⟨⟩
+     4 ∸ 2
+  ≡⟨⟩
+     3 ∸ 1
+  ≡⟨⟩
+     2 ∸ 0
+  ≡⟨⟩
+     2
+  ∎
+_ =
+  begin
+     3 ∸ 5
+  ≡⟨⟩
+     2 ∸ 4
+  ≡⟨⟩
+     1 ∸ 3
+  ≡⟨⟩
+     0 ∸ 2
+  ≡⟨⟩
+     0
+  ∎
 \end{code}
 
 
@@ -917,6 +957,34 @@ represents a positive natural, and represent zero by `x0 nil`.
 Confirm that these both give the correct answer for zero through four.
 
 \begin{code}
+inc : Bin → Bin
+inc nil    = x1 nil
+inc (x0 b) = x1 b
+inc (x1 b) = x0 inc b
+
+-- binary numbers: test with C-c C-n
+b_zero   = x0 nil
+b_one    = x1 nil
+b_two    = x0 x1 nil
+b_three  = x1 x1 nil
+b_four   = x0 x0 x1 nil
+b_eleven = x1 x1 x0 x1 nil
+b_twelve = x0 x0 x1 x1 nil
+
+-- unary numbers
+u_zero = zero -- ≡ 0
+u_one  = suc zero -- ≡ 1
+u_two  = suc (suc zero) -- ≡ 2
+
+to : ℕ → Bin
+to zero = x0 nil
+to (suc zero) = x1 nil
+to (suc (suc x)) = inc (to (suc x))
+
+from : Bin → ℕ
+from nil = zero
+from (x0 x) = (from x) + (from x)
+from (x1 x) = suc ((from x) + (from x))
 -- Your code goes here
 \end{code}
 
