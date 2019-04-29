@@ -18,7 +18,8 @@ the next step is to define relations, such as _less than or equal_.
 \begin{code}
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong)
-open import Data.Nat using (ℕ; zero; suc; _+_)
+open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
 open import Data.Nat.Properties using (+-comm)
 \end{code}
 
@@ -229,12 +230,14 @@ Give an example of a preorder that is not a partial order.
 
 \begin{code}
 -- Your code goes here
+-- reflexive, transitive, and not-anti-symmetric: =
 \end{code}
 
 Give an example of a partial order that is not a total order.
 
 \begin{code}
 -- Your code goes here
+-- reflexive, transitive, anti-symmetric, and not total: ≤
 \end{code}
 
 ## Reflexivity
@@ -348,6 +351,7 @@ argument is `s≤s`.  Why is it ok to omit them?
 
 \begin{code}
 -- Your code goes here
+-- Suppose we have n = z≤n and m = (s≤s x). n ≤ m holds but m ≤ n does not hold.
 \end{code}
 
 
@@ -585,6 +589,9 @@ Show that strict inequality is transitive.
 
 \begin{code}
 -- Your code goes here
+<-trans : ∀ {m n p : ℕ} → m < n → n < p → m < p
+<-trans z<s (s<s x₁) = z<s
+<-trans (s<s x) (s<s x₁) = s<s (<-trans x x₁)
 \end{code}
 
 #### Exercise `trichotomy` {#trichotomy}
@@ -603,6 +610,25 @@ similar to that used for totality.
 
 \begin{code}
 -- Your code goes here
+infix 4 _>_
+
+data _>_ : ℕ → ℕ → Set where
+  s>z : ∀ {n : ℕ} → suc n > zero
+  s>s : ∀ {m n : ℕ} → m > n → suc m > suc n
+
+data Trichotomy (m n : ℕ) : Set where
+ less    : m < n → Trichotomy m n
+ equal   : m ≡ n → Trichotomy m n
+ greater : m > n → Trichotomy m n
+
+trichotomy : ∀ {m n : ℕ} → Trichotomy m n
+trichotomy {zero} {zero} = equal refl
+trichotomy {zero} {suc n} = less z<s
+trichotomy {suc m} {zero} = greater s>z
+trichotomy {suc m} {suc n} with trichotomy {m} {n}
+trichotomy {suc m} {suc n} | less x = less (s<s x)
+trichotomy {suc m} {suc n} | equal x = equal (cong suc x)
+trichotomy {suc m} {suc n} | greater x = greater (s>s x)
 \end{code}
 
 #### Exercise `+-mono-<` {#plus-mono-less}
