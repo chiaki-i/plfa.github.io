@@ -19,7 +19,7 @@ the next step is to define relations, such as _less than or equal_.
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 open import Data.Nat.Properties using (+-comm)
 \end{code}
 
@@ -542,6 +542,29 @@ Show that multiplication is monotonic with regard to inequality.
 
 \begin{code}
 -- Your code goes here
+*-monoʳ-≤ : ∀ (n p q : ℕ) → p ≤ q → n * p ≤ n * q
+*-monoʳ-≤ zero p q p≤q = z≤n {n = zero}
+*-monoʳ-≤ (suc n) p q p≤q =
+  ≤-trans
+    (+-monoˡ-≤ p q (n * p) p≤q)
+    (+-monoʳ-≤ q (n * p) (n * q) (*-monoʳ-≤ n p q p≤q))
+-- 2nd case:
+-- p + (n * p) ≤ q + (n * p) ≤ q + (n * q)
+-- (+-monoˡ-≤ p q (n * p) p≤q) generates (p + (n * p) ≤ q + (n * p)).
+
+-- ∸-monoˡ-≤ : ∀ (m n p : ℕ) → m ≤ n → m ∸ p ≤ n ∸ p
+-- ∸-monoˡ-≤ = ?
+
+*-monoˡ-≤ : ∀ (m n p : ℕ) → m ≤ n → m * p ≤ n * p
+*-monoˡ-≤ zero n p zero≤n = z≤n
+*-monoˡ-≤ (suc m) (suc n) p (s≤s m≤n) = +-monoʳ-≤ p (m * p) (n * p) (*-monoˡ-≤ m n p m≤n)
+-- 2nd case:
+-- if m has the form of (suc m), the form of n should be (suc n).
+-- 4th arg: (s≤s _) ⇒ ∸-mono... unnecessary
+
+*-mono-≤ : ∀ (m n p q : ℕ) →
+           (m ≤ n) → (p ≤ q) → (m * p) ≤ (n * q)
+*-mono-≤ m n p q m≤n p≤q = ≤-trans (*-monoˡ-≤ m n p m≤n) (*-monoʳ-≤ n p q p≤q)
 \end{code}
 
 
@@ -638,6 +661,15 @@ As with inequality, some additional definitions may be required.
 
 \begin{code}
 -- Your code goes here
++-monoʳ-< : ∀ (n p q : ℕ) → p < q → n + p < n + q
++-monoʳ-< zero p q p<q = p<q
++-monoʳ-< (suc n) p q p<q = s<s (+-monoʳ-< n p q p<q)
+
++-monoˡ-< : ∀ (m n p : ℕ) → m < n → m + p < n + p
++-monoˡ-< m n p m<n rewrite +-comm m p | +-comm n p = +-monoʳ-< p m n m<n
+
++-mono-< : ∀ (m n p q : ℕ) → m < n → p < q → m + p < n + q
++-mono-< m n p q m<n p<q = <-trans (+-monoˡ-< m n p m<n) (+-monoʳ-< n p q p<q)
 \end{code}
 
 #### Exercise `≤-iff-<` (recommended) {#leq-iff-less}
@@ -646,6 +678,14 @@ Show that `suc m ≤ n` implies `m < n`, and conversely.
 
 \begin{code}
 -- Your code goes here
+<-if-≤ : ∀ (m n : ℕ) → suc m ≤ n → m < n
+<-if-≤ zero (suc n) x = z<s
+<-if-≤ (suc m) (suc n) (s≤s x) = s<s (<-if-≤ m n x)
+-- split cases with m, and all other args
+
+≤-if-< : ∀ (m n : ℕ) → m < n → suc m ≤ n
+≤-if-< zero (suc n) z<s = s≤s z≤n
+≤-if-< (suc m) (suc n) (s<s x) = s≤s (≤-if-< m n x)
 \end{code}
 
 #### Exercise `<-trans-revisited` {#less-trans-revisited}
@@ -656,6 +696,28 @@ the fact that inequality is transitive.
 
 \begin{code}
 -- Your code goes here
+≤-<-trans : ∀ (m n p : ℕ) → m ≤ n → n < p → m ≤ p
+≤-<-trans zero zero (suc p) z≤n z<s = z≤n
+≤-<-trans zero (suc n) (suc p) z≤n (s<s x₁) = z≤n
+≤-<-trans (suc m) (suc n) (suc p) (s≤s x) (s<s x₁) = s≤s (≤-<-trans m n p x x₁)
+
+<-trans′ : ∀ (m n p : ℕ) → m < n → n < p → m < p
+<-trans′ zero (suc n) (suc p) z<s (s<s x₁) = z<s
+<-trans′ (suc m) (suc n) (suc p) (s<s m<n) (s<s n<p) =
+  <-if-≤ (suc m) (suc p)
+    (+-monoʳ-≤ 1 (suc m) p
+      (≤-<-trans (suc m) n p (≤-if-< m n m<n) n<p))
+{-
+ m < n
+---------- (≤-if-<)  -------
+ suc m ≤ n            n < p
+--------------------------------- (≤-<-trans)
+      suc m ≤ p
+--------------------- (+-monoʳ-≤)
+ suc (suc m) ≤ suc p
+--------------------- (<-if-≤)
+ suc m < suc p
+-}
 \end{code}
 
 
@@ -763,6 +825,8 @@ Show that the sum of two odd numbers is even.
 
 \begin{code}
 -- Your code goes here
+o+o≡e : ∀ {m n : ℕ} → odd m → odd n → even (m + n)
+o+o≡e {n = n} (suc {m} em) on rewrite +-comm m n = suc (o+e≡o on em)
 \end{code}
 
 #### Exercise `Bin-predicates` (stretch) {#Bin-predicates}
