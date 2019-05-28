@@ -427,15 +427,21 @@ open ≲-Reasoning
 
 Show that every isomorphism implies an embedding.
 \begin{code}
-postulate
-  ≃-implies-≲ : ∀ {A B : Set}
-    → A ≃ B
-      -----
-    → A ≲ B  
+-- postulate
+--   ≃-implies-≲ : ∀ {A B : Set}
+--     → A ≃ B
+--       -----
+--     → A ≲ B
 \end{code}
 
 \begin{code}
 -- Your code goes here
+≃-implies-≲ : ∀ {A B : Set} → A ≃ B → A ≲ B
+≃-implies-≲ A≃B = record
+  { to = to A≃B
+  ; from = from A≃B
+  ; from∘to = from∘to A≃B
+  }
 \end{code}
 
 #### Exercise `_⇔_` {#iff}
@@ -451,6 +457,24 @@ Show that equivalence is reflexive, symmetric, and transitive.
 
 \begin{code}
 -- Your code goes here
+open _⇔_
+⇔-refl : ∀ {A : Set} → A ⇔ A
+⇔-refl = record
+  { to = λ x → x
+  ; from = λ x → x
+  }
+
+⇔-sym : ∀ {A B : Set} → (A ⇔ B) → (B ⇔ A)
+⇔-sym A⇔B = record
+  { to = from A⇔B
+  ; from = to A⇔B
+  }
+
+⇔-trans : ∀ {A B C : Set} → (A ⇔ B) → (B ⇔ C) → (A ⇔ C)
+⇔-trans A⇔B B⇔C = record
+  { to = to B⇔C ∘ to A⇔B
+  ; from = from A⇔B ∘ from B⇔C
+  }
 \end{code}
 
 #### Exercise `Bin-embedding` (stretch) {#Bin-embedding}
