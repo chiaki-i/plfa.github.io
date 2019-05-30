@@ -872,9 +872,9 @@ you will need to formulate and prove suitable lemmas.
 *-zeroʳ zero = refl
 *-zeroʳ (suc m) = *-zeroʳ m
 
--- *-identityʳ : ∀ (m : ℕ) → m * 1 ≡ m
--- *-identityʳ zero = refl
--- *-identityʳ (suc m) = cong suc (*-identityʳ m)
+*-identityʳ : ∀ (m : ℕ) → m * 1 ≡ m
+*-identityʳ zero = refl
+*-identityʳ (suc m) = cong suc (*-identityʳ m)
 
 *-suc : ∀ (m n : ℕ) → m * (suc n) ≡ m + m * n
 *-suc zero n = refl
@@ -911,6 +911,10 @@ for all naturals `m`, `n`, and `p`.
 
 \begin{code}
 -- Your code goes here
+∸-+-assoc : (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc n zero p = refl
+∸-+-assoc zero (suc n) p = 0∸n≡0 p
+∸-+-assoc (suc m) (suc n) p = ∸-+-assoc m n p
 \end{code}
 
 
@@ -984,24 +988,24 @@ from-inc (x1 x) =
     suc (suc (from x + from x))
   ∎
 
-to-from : ∀ (x : Bin) → to (from x) ≡ x
-to-from nil = {!!} -- unprovable unless (x0 nil ≡ nil) is defined
-  -- begin
-  --   (x0 nil)
-  -- ≡⟨ {!!} ⟩
-  --   {!!}
-  -- ≡⟨ {!!} ⟩
-  --   nil
-  -- ∎
-to-from (x0 x) = {!!}
-  -- begin
-  --   to (from x + from x)
-  -- ≡⟨ {!!} ⟩
-  --   {!!}
-  -- ≡⟨ {!!} ⟩
-  --   (x0 x)
-  -- ∎
-to-from (x1 x) = {!!}
+-- to-from : ∀ (x : Bin) → to (from x) ≡ x
+-- to-from nil = {!!} -- unprovable unless (x0 nil ≡ nil) is defined
+--   -- begin
+--   --   (x0 nil)
+--   -- ≡⟨ {!!} ⟩
+--   --   {!!}
+--   -- ≡⟨ {!!} ⟩
+--   --   nil
+--   -- ∎
+-- to-from (x0 x) = {!!}
+--   -- begin
+--   --   to (from x + from x)
+--   -- ≡⟨ {!!} ⟩
+--   --   {!!}
+--   -- ≡⟨ {!!} ⟩
+--   --   (x0 x)
+--   -- ∎
+-- to-from (x1 x) = {!!}
 
 from-to-suc : ∀ (n : ℕ) → from (to (suc n)) ≡ suc (from (to n))
 from-to-suc zero = refl
