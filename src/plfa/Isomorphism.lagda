@@ -484,10 +484,10 @@ Recall that Exercises
 [Bin-laws][plfa.Induction#Bin-laws]
 define a datatype of bitstrings representing natural numbers:
 \begin{code}
-data Bin : Set where
-  nil : Bin
-  x0_ : Bin → Bin
-  x1_ : Bin → Bin
+-- data Bin : Set where
+--   nil : Bin
+--   x0_ : Bin → Bin
+--   x1_ : Bin → Bin
 \end{code}
 And ask you to define the following functions
 
@@ -501,6 +501,13 @@ which satisfy the following property:
 Using the above, establish that there is an embedding of `ℕ` into `Bin`.
 \begin{code}
 -- Your code goes here
+open import plfa.Induction as ind
+
+N≲Bin : ℕ ≲ Bin
+N≲Bin = record
+  { to = λ n → ind.to n
+  ; from = λ b → ind.from b
+  ; from∘to = λ n → ind.from-to n }
 \end{code}
 
 Why do `to` and `from` not form an isomorphism?
