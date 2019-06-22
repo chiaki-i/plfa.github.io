@@ -29,7 +29,7 @@ open Eq using (_≡_; refl)
 open Eq.≡-Reasoning
 open import Data.Nat using (ℕ)
 open import Function using (_∘_)
-open import plfa.Isomorphism using (_≃_; _≲_; extensionality)
+open import plfa.Isomorphism using (_≃_; _≲_; extensionality; _⇔_)
 open plfa.Isomorphism.≃-Reasoning
 \end{code}
 
@@ -233,6 +233,14 @@ is isomorphic to `(A → B) × (B → A)`.
 
 \begin{code}
 -- Your code goes here
+⇔≃× : ∀ {A B C : Set} → A ⇔ B ≃ (A → B) × (B → A)
+⇔≃× =
+  record
+  { to = λ{ record { to = to ; from = from } → ⟨ to , from ⟩ }
+  ; from = λ{ ⟨ A→B , B→A ⟩ → record { to = A→B ; from = B→A } }
+  ; from∘to = λ{ record { to = to ; from = from } → refl }
+  ; to∘from = λ{ ⟨ A→B , B→A ⟩ → refl }
+  }
 \end{code}
 
 
@@ -423,6 +431,14 @@ Show sum is commutative up to isomorphism.
 
 \begin{code}
 -- Your code goes here
+⊎-comm : ∀ {A B : Set} → A ⊎ B ≃ B ⊎ A
+⊎-comm =
+  record
+  { to = λ{ (inj₁ a) → inj₂ a ; (inj₂ b) → inj₁ b }
+  ; from = λ{ (inj₁ b) → inj₂ b ; (inj₂ a) → inj₁ a }
+  ; from∘to = λ{ (inj₁ x) → refl ; (inj₂ x) → refl }
+  ; to∘from = λ{ (inj₁ x) → refl ; (inj₂ x) → refl }
+  }
 \end{code}
 
 #### Exercise `⊎-assoc`
@@ -431,6 +447,26 @@ Show sum is associative up to isomorphism.
 
 \begin{code}
 -- Your code goes here
+⊎-assoc : ∀ {A B C : Set} → (A ⊎ B) ⊎ C ≃ A ⊎ (B ⊎ C)
+⊎-assoc =
+  record
+  { to = λ{ (inj₁ (inj₁ a)) → inj₁ a ;
+            (inj₁ (inj₂ b)) → inj₂ (inj₁ b) ;
+            (inj₂ c) → inj₂ (inj₂ c)
+          }
+  ; from = λ{ (inj₁ a) → inj₁ (inj₁ a) ;
+              (inj₂ (inj₁ b)) → inj₁ (inj₂ b) ;
+              (inj₂ (inj₂ c)) → inj₂ c
+            }
+  ; from∘to = λ{ (inj₁ (inj₁ a)) → refl ;
+                 (inj₁ (inj₂ b)) → refl ;
+                 (inj₂ c) → refl
+               }
+  ; to∘from = λ{ (inj₁ a) → refl ;
+                 (inj₂ (inj₁ b)) → refl ;
+                 (inj₂ (inj₂ c)) → refl
+              }
+  }
 \end{code}
 
 ## False is empty
@@ -740,13 +776,22 @@ distributive law, and explain how it relates to the weak version.
 
 Show that a disjunct of conjuncts implies a conjunct of disjuncts:
 \begin{code}
-postulate
-  ⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
+-- postulate
+--   ⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
 \end{code}
 Does the converse hold? If so, prove; if not, give a counterexample.
 
 \begin{code}
 -- Your code goes here
+⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
+⊎×-implies-×⊎ {A} {B} {C} {D} (inj₁ ⟨ a , b ⟩) = ⟨ inj₁ a , inj₁ b ⟩
+⊎×-implies-×⊎ {A} {B} {C} {D} (inj₂ ⟨ a , b ⟩) = ⟨ inj₂ a , inj₂ b ⟩
+
+-- ⊎×-implies-×⊎-converse : ∀ {A B C D : Set} → (A ⊎ C) × (B ⊎ D) → (A × B) ⊎ (C × D)
+-- ⊎×-implies-×⊎-converse {A} {B} {C} {D} ⟨ inj₁ a , inj₁ b ⟩ = inj₁ ⟨ a , b ⟩
+-- ⊎×-implies-×⊎-converse {A} {B} {C} {D} ⟨ inj₁ a , inj₂ d ⟩ = {!!}
+-- ⊎×-implies-×⊎-converse {A} {B} {C} {D} ⟨ inj₂ c , inj₁ b ⟩ = {!!}
+-- ⊎×-implies-×⊎-converse {A} {B} {C} {D} ⟨ inj₂ c , inj₂ d ⟩ = inj₂ ⟨ c , d ⟩
 \end{code}
 
 
