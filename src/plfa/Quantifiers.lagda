@@ -19,8 +19,8 @@ import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
 open import Relation.Nullary using (¬_)
-open import Data.Product using (_×_; proj₁) renaming (_,_ to ⟨_,_⟩)
-open import Data.Sum using (_⊎_)
+open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import plfa.Isomorphism using (_≃_; extensionality)
 \end{code}
 
@@ -85,9 +85,18 @@ dependent product is ambiguous.
 
 Show that universals distribute over conjunction:
 \begin{code}
-postulate
-  ∀-distrib-× : ∀ {A : Set} {B C : A → Set} →
-    (∀ (x : A) → B x × C x) ≃ (∀ (x : A) → B x) × (∀ (x : A) → C x)
+-- postulate
+--   ∀-distrib-× : ∀ {A : Set} {B C : A → Set} →
+--     (∀ (x : A) → B x × C x) ≃ (∀ (x : A) → B x) × (∀ (x : A) → C x)
+
+∀-distrib-× : ∀ {A : Set} {B C : A → Set} →
+  (∀ (x : A) → B x × C x) ≃ (∀ (x : A) → B x) × (∀ (x : A) → C x)
+∀-distrib-× = record
+  { to = λ a→b×c → ⟨ (λ a → proj₁ (a→b×c a)) , (λ b → proj₂ (a→b×c b)) ⟩
+  ; from = λ{ ⟨ a→b , a→c ⟩ → (λ a → ⟨ (a→b a) , (a→c a) ⟩) }
+  ; from∘to = λ a→b×c → refl
+  ; to∘from = λ{ ⟨ fst , snd ⟩ → refl }
+  }
 \end{code}
 Compare this with the result (`→-distrib-×`) in
 Chapter [Connectives][plfa.Connectives].
@@ -96,9 +105,19 @@ Chapter [Connectives][plfa.Connectives].
 
 Show that a disjunction of universals implies a universal of disjunctions:
 \begin{code}
-postulate
-  ⊎∀-implies-∀⊎ : ∀ {A : Set} {B C : A → Set} →
-    (∀ (x : A) → B x) ⊎ (∀ (x : A) → C x)  →  ∀ (x : A) → B x ⊎ C x
+-- postulate
+--   ⊎∀-implies-∀⊎ : ∀ {A : Set} {B C : A → Set} →
+--     (∀ (x : A) → B x) ⊎ (∀ (x : A) → C x)  →  ∀ (x : A) → B x ⊎ C x
+
+⊎∀-implies-∀⊎ : ∀ {A : Set} {B C : A → Set} →
+  (∀ (x : A) → B x) ⊎ (∀ (x : A) → C x)  →  ∀ (x : A) → B x ⊎ C x
+⊎∀-implies-∀⊎ (inj₁ a→b) a = inj₁ (a→b a)
+⊎∀-implies-∀⊎ (inj₂ a→c) a = inj₂ (a→c a)
+
+-- ⊎∀-implies-∀⊎-converse : ∀ {A : Set} {B C : A → Set} →
+--   ∀ (x : A) → B x ⊎ C x → (∀ (x : A) → B x) ⊎ (∀ (x : A) → C x)
+-- ⊎∀-implies-∀⊎-converse a b⊎c = inj₁ (λ a → {!!})
+-- we're not sure which of the evidences we have in b⊎c
 \end{code}
 Does the converse hold? If so, prove; if not, explain why.
 
