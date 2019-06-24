@@ -16,12 +16,16 @@ and classical logic.
 ## Imports
 
 \begin{code}
-open import Relation.Binary.PropositionalEquality using (_≡_)
+open import Agda.Builtin.Equality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; cong)
 open import Data.Nat using (ℕ; zero; suc)
+open import plfa.Relations using (_<_; s<s; s>s; _>_; Trichotomy)
+open Trichotomy
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (_×_)
 open import plfa.Isomorphism using (_≃_; extensionality)
+open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 \end{code}
 
 
@@ -195,8 +199,21 @@ is irreflexive, that is, `n < n` holds for no `n`.
 
 \begin{code}
 -- Your code goes here
-\end{code}
+-- この関数を呼ぶことで ¬ (m < n) が得られるので、⊥ を示したければ
+-- イコールの左辺にある仮定の (m < n) を使えばよい
+<-irreflexive : ∀ (m n : ℕ) → m ≡ n → ¬ m < n
+<-irreflexive zero .0 refl ()
+<-irreflexive (suc m) .(suc m) refl (_<_.s<s m<m) =
+  <-irreflexive m m refl m<m
 
+<-pred : ∀ {m n : ℕ} → suc m < suc n → m < n
+<-pred (s<s m<n) = m<n
+
+-- 手持ちの x が suc n < suc n であるのに対して、
+-- 再帰では n < n を示していきたい
+<-irreflexive′ : ∀ (n : ℕ) → ¬ n < n
+<-irreflexive′ (suc n) x = <-irreflexive′ n (<-pred x)
+\end{code}
 
 #### Exercise `trichotomy`
 
@@ -213,6 +230,19 @@ but that when one holds the negation of the other two must also hold.
 
 \begin{code}
 -- Your code goes here
+data ¬Trichotomy (m n : ℕ) : Set where
+  less    : ¬ m > n → ¬ m ≡ n → ¬Trichotomy m n
+  equal   : ¬ m > n → ¬ m < n → ¬Trichotomy m n
+  greater : ¬ m < n → ¬ m ≡ n → ¬Trichotomy m n
+
+-- trichotomy : ∀ (m n : ℕ) → ¬Trichotomy m n
+-- trichotomy zero zero       = equal (λ ()) (λ ())
+-- trichotomy zero (suc n)    = less (λ ()) (λ ())
+-- trichotomy (suc m) zero    = greater (λ ()) (λ ())
+-- trichotomy (suc m) (suc n) with trichotomy m n
+-- trichotomy (suc m) (suc n) | less ¬m>n ¬m≡n = {!!}
+-- trichotomy (suc m) (suc n) | equal x x₁ = {!!}
+-- trichotomy (suc m) (suc n) | greater x x₁ = {!!}
 \end{code}
 
 #### Exercise `⊎-dual-×` (recommended)
@@ -226,6 +256,13 @@ This result is an easy consequence of something we've proved previously.
 
 \begin{code}
 -- Your code goes here
+⊎-dual-× : ∀ (A B C : Set) → ¬ (A ⊎ B) ≃ (¬ A) × (¬ B)
+⊎-dual-× A B C = record
+  { to = λ z → ⟨ (λ x → z (inj₁ x)) , (λ x → z (inj₂ x)) ⟩
+  ; from = λ ¬A×¬B → λ { (inj₁ a) → (proj₁ ¬A×¬B) a ; (inj₂ b) → (proj₂ ¬A×¬B) b }
+  ; from∘to = λ{ ¬A⊎B → extensionality λ{ (inj₁ a) → refl ; (inj₂ b) → refl }}
+  ; to∘from = λ{ ⟨ fst , snd ⟩ → refl }
+  }
 \end{code}
 
 
@@ -398,6 +435,14 @@ of two stable formulas is stable.
 
 \begin{code}
 -- Your code goes here
+neg-stable : ∀ (x : Set) → Stable (¬ x)
+neg-stable x ¬¬¬x x₁ = ¬¬¬-elim ¬¬¬x x₁
+
+conj-stable : ∀ (x y : Set) → Stable x → Stable y → Stable (x × y)
+conj-stable x y sx sy ¬¬x×y =
+  ⟨ sx (λ ¬x → ¬¬x×y (λ x×y → ¬x (proj₁ x×y)))
+  , sy (λ ¬y → ¬¬x×y (λ x×y → ¬y (proj₂ x×y)))
+  ⟩
 \end{code}
 
 ## Standard Prelude
