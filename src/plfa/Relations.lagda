@@ -17,10 +17,12 @@ the next step is to define relations, such as _less than or equal_.
 
 \begin{code}
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl; cong)
+open Eq using (_≡_; refl; cong; sym)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; _≡⟨_⟩_; _∎)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
 open import Data.Nat.Properties using (+-comm)
+open import plfa.Induction using
+  (+-suc; Bin; x1_; x0_; nil; inc; to; from; from-inc; from-to)
 \end{code}
 
 
@@ -747,6 +749,15 @@ data odd where
     → even n
       -----------
     → odd (suc n)
+
+zero-is-even : even 0
+zero-is-even = zero
+
+one-is-odd : odd 1
+one-is-odd = suc zero
+
+three-is-odd : odd 3
+three-is-odd = suc (suc (suc zero))
 \end{code}
 A number is even if it is zero or the successor of an odd number,
 and odd if it is the successor of an even number.
@@ -879,6 +890,61 @@ properties of `One`.)
 
 \begin{code}
 -- Your code goes here
+data One : Bin → Set where
+  one : One (x1 nil)
+  suc : ∀ {b : Bin} → One b → One (inc b)
+
+data Can : Bin → Set where
+  zero : Can (x0 nil)
+  suc  : ∀ {b : Bin} → One b → Can b
+
+inc-one : ∀ (b : Bin) → One b → One (inc b)
+inc-one b x = suc x
+
+inc-can : ∀ (b : Bin) → Can b → Can (inc b)
+inc-can .(x0 nil) zero = suc one
+inc-can b (suc x) = suc (suc x)
+
+suc-inc : ∀ (n : ℕ) → to (suc n) ≡ inc (to n)
+suc-inc zero = refl
+suc-inc (suc n) = refl
+
+nat-one : ∀ (n : ℕ) → One (to (suc n))
+nat-one zero = one
+nat-one (suc n) = suc (nat-one n)
+
+nat-can′ : ∀ (n : ℕ) → Can (to (suc n))
+nat-can′ zero = suc one
+nat-can′ (suc n) = suc (suc (nat-one n))
+
+nat-can : ∀ (n : ℕ) → Can (to n)
+nat-can zero = zero
+nat-can (suc n) = nat-can′ n
+
+id-one : ∀ (b : Bin) → One b → to (from b) ≡ b
+id-one .(x1 nil) one = refl
+id-one .(inc b) (suc {b} x) rewrite from-inc b | suc-inc (from b) =
+  cong inc (id-one b x)
+
+open import Data.Empty using (⊥)
+inc-nil : ∀ (b : Bin) → inc b ≡ nil → ⊥
+inc-nil nil ()
+inc-nil (x0 b) ()
+inc-nil (x1 b) ()
+
+nil-not-one : ∀ (b : Bin) → One b → b ≡ nil → ⊥
+nil-not-one .(inc b) (suc {b} x) y = inc-nil b y
+
+nil-not-can : Can nil → ⊥
+nil-not-can (suc x) with nil-not-one nil x refl
+nil-not-can (suc x) | ()
+
+id-can : ∀ (b : Bin) → Can b → to (from b) ≡ b
+id-can nil x with nil-not-can x
+id-can nil x | ()
+id-can (x0 .nil) zero = refl
+id-can (x0 b) (suc x) = id-one (x0 b) x
+id-can (x1 b) (suc x) = id-one (x1 b) x
 \end{code}
 
 ## Standard library
