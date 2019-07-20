@@ -23,7 +23,7 @@ of a new notion of _decidable_.
 
 \begin{code}
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl)
+open Eq using (_≡_; refl; cong)
 open Eq.≡-Reasoning
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_) renaming (_,_ to ⟨_,_⟩)
@@ -295,24 +295,60 @@ trouble normalising evidence of negation.)
 
 Analogous to the function above, define a function to decide strict inequality:
 \begin{code}
-postulate
-  _<?_ : ∀ (m n : ℕ) → Dec (m < n)
+-- postulate
+--   _<?_ : ∀ (m n : ℕ) → Dec (m < n)
 \end{code}
 
 \begin{code}
 -- Your code goes here
+¬z<z : ¬ (zero < zero)
+¬z<z ()
+
+¬s<z : ∀ {m : ℕ} → ¬ (suc m < zero)
+¬s<z ()
+
+¬s<s : ∀ {m n : ℕ} → ¬ (m < n) → ¬ (suc m < suc n)
+¬s<s ¬m<n (s<s m<n) = ¬m<n m<n
+
+_<?_ : ∀ (m n : ℕ) → Dec (m < n)
+zero <? zero               = no ¬z<z
+zero <? suc n              = yes z<s
+suc m <? zero              = no ¬s<z
+suc m <? suc n with m <? n
+(suc m <? suc n) | yes m<n = yes (s<s m<n)
+(suc m <? suc n) | no ¬m<n = no (¬s<s ¬m<n)
 \end{code}
 
 #### Exercise `_≡ℕ?_`
 
 Define a function to decide whether two naturals are equal:
 \begin{code}
-postulate
-  _≡ℕ?_ : ∀ (m n : ℕ) → Dec (m ≡ n)
+-- postulate
+--   _≡ℕ?_ : ∀ (m n : ℕ) → Dec (m ≡ n)
 \end{code}
 
 \begin{code}
 -- Your code goes here
+¬z≡s : ∀ {m : ℕ} → ¬ (zero ≡ suc m)
+¬z≡s ()
+
+¬s≡z : ∀ {m : ℕ} → ¬ (suc m ≡ zero)
+¬s≡z ()
+
+pred : ∀ (n : ℕ) → ℕ
+pred zero    = zero
+pred (suc n) = n
+
+¬s≡s : ∀ {m n : ℕ} → ¬ m ≡ n → ¬ suc m ≡ suc n
+¬s≡s m n = m (cong pred n)
+
+_≡ℕ?_ : ∀ (m n : ℕ) → Dec (m ≡ n)
+zero ≡ℕ? zero               = yes refl
+zero ≡ℕ? suc n              = no ¬z≡s
+suc m ≡ℕ? zero              = no ¬s≡z
+suc m ≡ℕ? suc n with m ≡ℕ? n
+(suc m ≡ℕ? suc n) | yes m≡n = yes (cong suc m≡n)
+(suc m ≡ℕ? suc n) | no ¬m≡n = no (¬s≡s ¬m≡n)
 \end{code}
 
 
@@ -539,10 +575,21 @@ on which matches; but either is equally valid.
 
 Show that erasure relates corresponding boolean and decidable operations:
 \begin{code}
-postulate
-  ∧-× : ∀ {A B : Set} (x : Dec A) (y : Dec B) → ⌊ x ⌋ ∧ ⌊ y ⌋ ≡ ⌊ x ×-dec y ⌋
-  ∨-× : ∀ {A B : Set} (x : Dec A) (y : Dec B) → ⌊ x ⌋ ∨ ⌊ y ⌋ ≡ ⌊ x ⊎-dec y ⌋
-  not-¬ : ∀ {A : Set} (x : Dec A) → not ⌊ x ⌋ ≡ ⌊ ¬? x ⌋
+∧-× : ∀ {A B : Set} (x : Dec A) (y : Dec B) → ⌊ x ⌋ ∧ ⌊ y ⌋ ≡ ⌊ x ×-dec y ⌋
+∧-× (yes a) (yes b) = refl
+∧-× (yes a) (no ¬b) = refl
+∧-× (no ¬a) (yes b) = refl
+∧-× (no ¬a) (no ¬b) = refl
+
+∨-× : ∀ {A B : Set} (x : Dec A) (y : Dec B) → ⌊ x ⌋ ∨ ⌊ y ⌋ ≡ ⌊ x ⊎-dec y ⌋
+∨-× (yes a) (yes b) = refl
+∨-× (yes a) (no ¬b) = refl
+∨-× (no ¬a) (yes b) = refl
+∨-× (no ¬a) (no ¬b) = refl
+
+not-¬ : ∀ {A : Set} (x : Dec A) → not ⌊ x ⌋ ≡ ⌊ ¬? x ⌋
+not-¬ (yes a) = refl
+not-¬ (no ¬a) = refl
 \end{code}
   
 #### Exercise `iff-erasure` (recommended)
@@ -551,10 +598,23 @@ Give analogues of the `_⇔_` operation from
 Chapter [Isomorphism][plfa.Isomorphism#iff],
 operation on booleans and decidables, and also show the corresponding erasure:
 \begin{code}
-postulate
-  _iff_ : Bool → Bool → Bool
-  _⇔-dec_ : ∀ {A B : Set} → Dec A → Dec B → Dec (A ⇔ B)
-  iff-⇔ : ∀ {A B : Set} (x : Dec A) (y : Dec B) → ⌊ x ⌋ iff ⌊ y ⌋ ≡ ⌊ x ⇔-dec y ⌋  
+_iff_ : Bool → Bool → Bool
+true  iff true  = true
+true  iff false = false
+false iff true  = false
+false iff false = true
+
+_⇔-dec_ : ∀ {A B : Set} → Dec A → Dec B → Dec (A ⇔ B)
+yes a ⇔-dec yes b = yes (record { to = λ a → b ; from = λ b → a })
+yes a ⇔-dec no ¬b = no λ{ record { to = to ; from = from } → ¬b (to a) }
+no ¬a ⇔-dec yes b = no λ{ record { to = to ; from = from } → ¬a (from b) }
+no ¬a ⇔-dec no ¬b = yes (record { to = λ a → {!!} ; from = λ b → {!!} })
+
+iff-⇔ : ∀ {A B : Set} (x : Dec A) (y : Dec B) → ⌊ x ⌋ iff ⌊ y ⌋ ≡ ⌊ x ⇔-dec y ⌋
+iff-⇔ (yes a) (yes b) = refl
+iff-⇔ (yes a) (no ¬b) = refl
+iff-⇔ (no ¬a) (yes b) = refl
+iff-⇔ (no ¬a) (no ¬b) = refl
 \end{code}
 
 \begin{code}
