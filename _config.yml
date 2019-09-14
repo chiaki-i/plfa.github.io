@@ -20,6 +20,29 @@ authors:
     corresponding: true
     github_username: wenkokke
     twitter_username: wenkokke
+  - name: Jeremy Siek
+    email: jsiek@indiana.edu
+    corresponding: true
+    github_username: jsiek
+    twitter_username: jeremysiek
+
+extra_contributors:
+  - github_username: cyberglot
+  - name: Vikraman Choudhury
+  - name: Ben Darwin
+  - github_username: koo5
+  - name: Anish Tondwalkar
+  - name: Nils Anders Danielsson
+  - name: Miëtek Bak
+  - name: Gergő Érdi
+  - name: Adam Sandberg Eriksson
+  - name: David Janin
+  - name: András Kovács
+  - name: Ulf Norell
+  - name: Liam O'Connor
+  - name: N. Raghavendra
+  - name: Roman Kireev
+  - name: Amr Sabry
 
 google_analytics: "UA-125055580-1"
 
@@ -32,9 +55,15 @@ markdown: kramdown
 theme: minima
 exclude:
   - "hs/"
-  - "src/"
   - "extra/"
+  - "depr/"
+  - "papers/"
+  - "slides/"
   - "vendor/"
-  - "*.lagda"
+  - "*.agdai"
+  - "*.agda-lib"
+  - "*.lagda.md"
+  - "Guardfile"
   - "Gemfile"
   - "Gemfile.lock"
+  - "highlight.sh"
